@@ -1,66 +1,174 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
 
-## About Laravel
+## Laravel Installation
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+    composer create-project laravel/laravel example-app
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Laravel Breeze
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+    Laravel Breeze is a minimal, simple implementation of all of Laravel's authentication features, including login, registration, password reset, email verification, and password confirmation. In addition, Breeze includes a simple "profile" page where the user may update their name, email address, and password.
 
-## Learning Laravel
+## Installation Breeze
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+    composer require laravel/breeze --dev
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+    php artisan breeze:install
+ 
+    php artisan migrate
+    npm install
+    npm run dev
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Migration Table
+    Schema::create('users', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('email')->unique();
+        $table->timestamp('email_verified_at')->nullable();
+        $table->string('password');
+        $table->enum('role', ['super-admin', 'admin', 'customer'])->default('customer');
+        $table->enum('status', ['Active','Inactive'])->default('Active');
+        $table->enum('deleted', ['Yes','No'])->default('No');
+        $table->rememberToken();
+        $table->timestamp('deleted_at')->nullable();
+        $table->timestamps();
+    });
 
-## Laravel Sponsors
+## Create User Seeder
+   php artisan make:seeder UserSeeder
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## User Seeder File
+   use Illuminate\Support\Facades\DB;
 
-### Premium Partners
+    public function run(): void
+    {
+        DB::table('users')->insert([
+            [
+                'name' => 'SuperAdmin',
+                'email' => 'superadmin@test.com',
+                'password' => bcrypt('password'),
+                'role' => 'super-admin',
+            ],
+            [
+                'name' => 'Admin',
+                'email' => 'admin@test.com',
+                'password' => bcrypt('password'),
+                'role' => 'admin',
+            ],
+            [
+                'name' => 'Customer',
+                'email' => 'customer@test.com',
+                'password' => bcrypt('password'),
+                'role' => 'customer',
+            ],
+        ]);
+    }
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## Call DatabaseSeeder
 
-## Contributing
+    $this->call([UserSeeder::class]);
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Route
 
-## Code of Conduct
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->middleware(['auth', 'role:customer', 'verified'])->name('dashboard');
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+    Route::middleware(['auth', 'role:super-admin'])->group(function () {
+        Route::get('/superAdmin/dashboard', [SuperAdminController::class, 'index'])->name('SuperAdmin');
+    });
 
-## Security Vulnerabilities
+    Route::middleware(['auth', 'role:admin'])->group(function () {
+        Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin');
+    });
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Navigation Menu
 
-## License
+    @if( Auth::user()->role == 'super-admin')
+        <x-nav-link :href="route('SuperAdmin')" :active="request()->routeIs('SuperAdmin')">
+            {{ __('Dashboard') }}
+        </x-nav-link>
+        <x-nav-link :href="route('SuperAdmin')" :active="request()->routeIs('Category')">
+            {{ __('Category') }}
+        </x-nav-link>
+        <x-nav-link :href="route('SuperAdmin')" :active="request()->routeIs('Post')">
+            {{ __('Post') }}
+        </x-nav-link>
+    @elseif( Auth::user()->role == 'admin')
+        <x-nav-link :href="route('admin')" :active="request()->routeIs('admin')">
+            {{ __('Dashboard') }}
+        </x-nav-link>
+    @else
+        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+            {{ __('Dashboard') }}
+        </x-nav-link>
+    @endif
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Multi-Authentication-with-Breeze-and-Single-Guard
+    
+    php artisan make:middleware RoleMiddleware
+
+## Kernel Add This Class
+
+    protected $middlewareAliases = [
+        'role' => \App\Http\Middleware\RoleMiddleware::class,
+    ];    
+
+## RoleMiddleware::class
+
+    public function handle(Request $request, Closure $next, $role): Response
+    {
+        if($request->User()->role !== $role){
+            abort(404);
+        }
+        return $next($request);
+    }
+
+## Authenticated Session Controller
+
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        //$request->authenticate();
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+    
+        $credentials = $request->only('email', 'password');
+    
+        if (Auth::attempt($credentials, $request->filled('remember'))) {
+            
+            if (Auth::user()->deleted_at === null AND Auth::user()->deleted === 'No') {
+
+                $request->session()->regenerate();
+
+                if($request->user()->role === 'super-admin'){
+                    
+                    return redirect()->route('SuperAdmin');
+        
+                }elseif($request->user()->role === 'admin'){
+                    
+                    return redirect()->route('admin');
+        
+                }else{
+                    return redirect()->intended('/dashboard');
+                }
+            } else {
+                Auth::logout();
+                return back()->withErrors(['email' => 'Your account has been deleted.']);
+            }
+        }
+    
+        return back()->withErrors(['email' => 'The provided credentials do not match our records.']);
+    }
+
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return redirect('/');
+    }
