@@ -6,6 +6,10 @@
     composer create-project laravel/laravel example-app
     composer require laravel/breeze --dev
 
+## .env
+
+    DB_DATABASE=auth-app
+
 ## Installation Breeze
 
     php artisan breeze:install
@@ -14,9 +18,7 @@
     npm install
     npm run dev
 
-## .env
 
-    DB_DATABASE=auth-app
 
 ## Migration Table
     Schema::create('users', function (Blueprint $table) {
