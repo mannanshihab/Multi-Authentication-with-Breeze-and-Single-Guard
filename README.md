@@ -89,6 +89,20 @@
     php artisan make:controller Admin/AdminController
     php artisan make:controller Admin/SuperAdminController
 
+## AdminPanel -> AdminController 
+
+    public function index()
+    {
+        return view('dashboard');
+    }
+
+## AdminPanel -> SuperAdminController 
+
+    public function index()
+    {
+        return view('dashboard');
+    }
+
 ## Authenticated Session Controller
 
     public function store(LoginRequest $request): RedirectResponse
