@@ -1,17 +1,12 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 
-## Laravel Installation
+## Laravel Installation with breeze
 
     composer create-project laravel/laravel example-app
-
-## Laravel Breeze
-
-#Laravel Breeze is a minimal, simple implementation of all of Laravel's authentication features, including login, registration, password reset, email verification, and password confirmation. In addition, Breeze includes a simple "profile" page where the user may update their name, email address, and password.
+    composer require laravel/breeze --dev
 
 ## Installation Breeze
-
-    composer require laravel/breeze --dev
 
     php artisan breeze:install
  
@@ -68,41 +63,6 @@
 
     $this->call([UserSeeder::class]);
 
-## Route
-
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->middleware(['auth', 'role:customer', 'verified'])->name('dashboard');
-
-    Route::middleware(['auth', 'role:super-admin'])->group(function () {
-        Route::get('/superAdmin/dashboard', [SuperAdminController::class, 'index'])->name('SuperAdmin');
-    });
-
-    Route::middleware(['auth', 'role:admin'])->group(function () {
-        Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin');
-    });
-
-## Navigation Menu
-
-    @if( Auth::user()->role == 'super-admin')
-        <x-nav-link :href="route('SuperAdmin')" :active="request()->routeIs('SuperAdmin')">
-            {{ __('Dashboard') }}
-        </x-nav-link>
-        <x-nav-link :href="route('SuperAdmin')" :active="request()->routeIs('Category')">
-            {{ __('Category') }}
-        </x-nav-link>
-        <x-nav-link :href="route('SuperAdmin')" :active="request()->routeIs('Post')">
-            {{ __('Post') }}
-        </x-nav-link>
-    @elseif( Auth::user()->role == 'admin')
-        <x-nav-link :href="route('admin')" :active="request()->routeIs('admin')">
-            {{ __('Dashboard') }}
-        </x-nav-link>
-    @else
-        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-            {{ __('Dashboard') }}
-        </x-nav-link>
-    @endif
 
 ## Multi-Authentication-with-Breeze-and-Single-Guard
     
@@ -123,6 +83,11 @@
         }
         return $next($request);
     }
+
+## Create Admin & Super Admin Controller 
+
+    php artisan make:controller Admin/AdminController
+    php artisan make:controller Admin/SuperAdminController
 
 ## Authenticated Session Controller
 
@@ -162,13 +127,64 @@
         return back()->withErrors(['email' => 'The provided credentials do not match our records.']);
     }
 
+
+## ProfileController
+
     public function destroy(Request $request): RedirectResponse
     {
-        Auth::guard('web')->logout();
+        $request->validateWithBag('userDeletion', [
+            'password' => ['required', 'current_password'],
+        ]);
+        $user = $request->user();
 
+        Auth::logout();
+        $user-> deleted = 'Yes';
+        $user-> status  = 'Inactive';
+        $user->deleted_at = now();
+        $user-> save();
+     
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return Redirect::to('/login');
     }
+
+
+
+## Route
+    use App\Http\Controllers\AdminPanel\AdminController;
+    use App\Http\Controllers\AdminPanel\SuperAdminController;
+
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->middleware(['auth', 'role:customer', 'verified'])->name('dashboard');
+
+    Route::middleware(['auth', 'role:super-admin'])->group(function () {
+        Route::get('/superAdmin/dashboard', [SuperAdminController::class, 'index'])->name('SuperAdmin');
+    });
+
+    Route::middleware(['auth', 'role:admin'])->group(function () {
+        Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin');
+    });
+
+## Navigation Menu
+
+    @if( Auth::user()->role == 'super-admin')
+        <x-nav-link :href="route('SuperAdmin')" :active="request()->routeIs('SuperAdmin')">
+            {{ __('Dashboard') }}
+        </x-nav-link>
+        <x-nav-link :href="route('SuperAdmin')" :active="request()->routeIs('Category')">
+            {{ __('Category') }}
+        </x-nav-link>
+        <x-nav-link :href="route('SuperAdmin')" :active="request()->routeIs('Post')">
+            {{ __('Post') }}
+        </x-nav-link>
+    @elseif( Auth::user()->role == 'admin')
+        <x-nav-link :href="route('admin')" :active="request()->routeIs('admin')">
+            {{ __('Dashboard') }}
+        </x-nav-link>
+    @else
+        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+            {{ __('Dashboard') }}
+        </x-nav-link>
+    @endif
