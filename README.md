@@ -14,6 +14,10 @@
     npm install
     npm run dev
 
+## .env
+
+    DB_DATABASE=auth-app
+
 ## Migration Table
     Schema::create('users', function (Blueprint $table) {
         $table->id();
