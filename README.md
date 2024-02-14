@@ -36,6 +36,7 @@
     });
 
 ## Create User Seeder
+   
    php artisan make:seeder UserSeeder
 
 ## User Seeder File
@@ -69,6 +70,9 @@
 
     $this->call([UserSeeder::class]);
 
+## Migrate Seed
+
+    php artisan migrate:fresh --seed
 
 ## Multi-Authentication-with-Breeze-and-Single-Guard
     
@@ -92,8 +96,8 @@
 
 ## Create Admin & Super Admin Controller 
 
-    php artisan make:controller Admin/AdminController
-    php artisan make:controller Admin/SuperAdminController
+    php artisan make:controller AdminPanel/AdminController
+    php artisan make:controller AdminPanel/SuperAdminController
 
 ## AdminPanel -> AdminController 
 
@@ -171,7 +175,7 @@
 
 
 
-## Route
+## Route Add SuperAdmin & Admin Update Dashboard 
     use App\Http\Controllers\AdminPanel\AdminController;
     use App\Http\Controllers\AdminPanel\SuperAdminController;
 
